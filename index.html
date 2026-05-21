@@ -847,14 +847,30 @@
       console.warn('Could not save access locally', e);
     }
 
-    // TODO: When Beehiiv is wired up, send firstName + email to Beehiiv here.
-    // Example shape (replace with actual Beehiiv endpoint or embed):
-    //
-    // fetch('https://api.beehiiv.com/v2/publications/PUB_ID/subscriptions', {
-    //   method: 'POST',
-    //   headers: { 'Authorization': 'Bearer YOUR_API_KEY', 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ email: email, first_name: firstName, utm_source: 'optin-page' })
-    // });
+    // ===========================================================
+    // GOOGLE SHEETS LEAD CAPTURE
+    // Paste your Google Apps Script Web App URL between the quotes below.
+    // (Setup instructions are in SETUP-EMAIL-CAPTURE.md)
+    // ===========================================================
+    var SHEETS_URL = "https://script.google.com/macros/s/AKfycbwhVJuHWDibb2UFjOEL7KsapmT8GDfJ2vwzlrIaw5HA_6Pr3yLRU9NA74E7JkeOW0Ci/exec";
+
+    if (SHEETS_URL && SHEETS_URL.indexOf("PASTE_YOUR") === -1) {
+      // Fire-and-forget: send the lead to Google Sheets in the background.
+      // We do NOT block the vault unlock on this. If the request fails, the
+      // visitor still gets in and we just log a warning.
+      fetch(SHEETS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'firstName=' + encodeURIComponent(firstName) +
+              '&email=' + encodeURIComponent(email) +
+              '&source=website'
+      }).catch(function(err) {
+        console.warn('Lead capture failed (vault still unlocked):', err);
+      });
+    } else {
+      console.warn('SHEETS_URL not configured. Lead was not captured.');
+    }
 
     showVault(firstName);
   });
